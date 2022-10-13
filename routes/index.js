@@ -3,12 +3,17 @@ var router = express.Router();
 
 
 var todos = require("../resource/todo");
+const Todos = require('../models/Todos');
 
 
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-res.render('home', {todosList:todos});
+router.get('/', async function(req, res, next) {
+  //Todos.find(todos =>{
+  
+  const todos = await Todos.find();
+  console.log(todos);
+res.render('home', {todosList: todos});
 });
 
 
@@ -20,8 +25,18 @@ router.get('/add-todo', function(req,res,next){
   res.render('add-todo',{title: 'Add To Do' })
 })
 
-router.post('/submit-todo', function(req,res,next){
-  todos.push({...req.body,_id:`00${todos.length}`});
+router.post('/submit-todo', async function(req,res,next){
+  // const todo = new Todos({
+  //   title: req.body.title,
+  //   description: req.body.description});
+
+  //   await todo.save();
+//or
+    // it can be done as todo.save().then(()=> console.log('todo inserted'))
+    //.catch(()=>console.log('error found'))
+                         
+  await Todos.insertMany([{title: req.body.title, description: req.body.description}])
+ // todos.push({...req.body,_id:`00${todos.length}`});
   res.redirect('/');
 })
 
@@ -31,25 +46,29 @@ router.post('/submit-todo', function(req,res,next){
 //   todos.splice(req.params.index, 1); //to remove the element at that index
 //   res.redirect('/');
 // });
-router.get('/delete-todo/:id', function(req,res,next){
-  
-  const id = todos.findIndex(todo => todo._id === req.params.id);
-  todos.splice(id,1);
+router.get('/delete-todo/:id',async function(req,res,next){
+  await Todos.remove({_id:req.params.id})
+ // const id = todos.findIndex(todo => todo._id === req.params.id);
+  //todos.splice(id,1);
    res.redirect('/');
 })
 
-router.get('/open-update-form/:id', function(req,res,next){
-  
-const todo1 = todos.find(todo => todo._id === req.params.id)
+router.get('/open-update-form/:id', async function(req,res,next){
+
+  const todo1 = await Todos.findOne({_id: req.params.id} ) 
+//const todo1 = todos.find(todo => todo._id === req.params.id)
 res.render('edit-todo',{todo : todo1})
 
 })
 
 
-router.post('/update-todo/:id', function(req,res,next){
-  console.log(req.body,req.params);
-  const index = todos.findIndex(todo => todo._id === req.params.id);
-  todos.splice(index,1,{...req.body, _id: req.params.id});
+router.post('/update-todo/:id', async function(req,res,next){
+
+  await Todos.updateOne({_id: req.params.id}, {$set:{title: req.body.title, description: req.body.description} })
+
+  // console.log(req.body,req.params);
+  // const index = todos.findIndex(todo => todo._id === req.params.id);
+  // todos.splice(index,1,{...req.body, _id: req.params.id});
   res.redirect('/');
 })
 
